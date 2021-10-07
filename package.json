@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Extron Matrix Switch",
+  "name": "homebridge-extron-matrix-switch",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "A plugin to control your Extron Matrix switch via HomeBridge.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/joeybaumgartner/homebridge-extron-matrix-switch.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/joeybaumgartner/homebridge-extron-matrix-switch/issues"
   },
   "engines": {
     "node": ">=12.13.0",
@@ -26,7 +26,9 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "telnet-client": "^1.4.9"
+  },
   "devDependencies": {
     "@types/node": "^14.14.31",
     "@typescript-eslint/eslint-plugin": "^4.16.1",

@@ -1,23 +1,37 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { ExampleHomebridgePlatform } from './platform';
+import { telnetResponse } from './common';
+import { PLUGIN_NAME } from './settings';
 
-/**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
- */
-export class ExamplePlatformAccessory {
+interface ExtronPreset {
+  number: number;
+  name: string;
+}
+
+class ExtronPresetValues {
+  videoData: string;
+  audioData: string;
+
+  constructor(videoData:string, audioData:string) {
+    this.videoData = videoData;
+    this.audioData = audioData;
+  }
+
+  equals(that: ExtronPresetValues):boolean {
+    if(this.videoData === that.videoData && this.audioData === that.audioData) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+export class ExtronMatrixSwitchPlatformAccessory {
   private service: Service;
 
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private exampleStates = {
-    On: false,
-    Brightness: 100,
-  };
+  private currentPreset = 0;
+  private presetsConfigured = false;
 
   constructor(
     private readonly platform: ExampleHomebridgePlatform,
@@ -26,116 +40,174 @@ export class ExamplePlatformAccessory {
 
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Extron, Inc.')
+      .setCharacteristic(this.platform.Characteristic.Model, 'Crosspoint ULTRA 88 HVA')
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, this.platform.config.serialNumber);
 
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
+    this.service = this.accessory.getService(this.platform.Service.Television)
+      || this.accessory.addService(this.platform.Service.Television);
+
+    this.init();
+
+    //this.platform.log.info(this.allPresets.toString());
+
+    const uuid = this.platform.api.hap.uuid.generate('homebridge:extron-matrix-switch' + accessory.context.device.displayName);
+    this.accessory.UUID = uuid;
+
+    this.accessory.category = this.platform.api.hap.Categories.AUDIO_RECEIVER;
+
+    this.service.setCharacteristic(this.platform.Characteristic.Name, 'TryThisNewName');
+
+    this.service.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
+      this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);
+
+    this.service.getCharacteristic(this.platform.Characteristic.Active)
+      .onSet((newValue) => {
+        this.platform.log.info('Changing to state %s', newValue);'';
+        this.setOnOffState(newValue.toString());
+      });
+
+    this.updatePowerStatus();
+    this.updatePresetStatus();
+
+    this.service.getCharacteristic(this.platform.Characteristic.ActiveIdentifier)
+      .onSet(async (value) => {
+
+        // the value will be the value you set for the Identifier Characteristic
+        // on the Input Source service that was selected - see input sources below.
+        await this.changeInput(parseInt(value.toString()));
+      });
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.exampleDisplayName);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.displayName);
 
-    // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/Lightbulb
+    // This is required to be implemented, so that's all this does for now
+    this.service.getCharacteristic(this.platform.Characteristic.RemoteKey)
+      .onSet((newValue) => {
+        switch(newValue) {
+          case this.platform.Characteristic.RemoteKey.REWIND: {
+            this.platform.log.info('set Remote Key Pressed: REWIND');
+            break;
+          }
+        }
+      });
 
-    // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-      .onSet(this.setOn.bind(this))                // SET - bind to the `setOn` method below
-      .onGet(this.getOn.bind(this));               // GET - bind to the `getOn` method below
+    setInterval(async () => {
+      await this.updatePresetStatus();
+      await this.updatePowerStatus();
+    }, 5000);
 
-    // register handlers for the Brightness Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
-
-    /**
-     * Creating multiple services of the same type.
-     *
-     * To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
-     * when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
-     * this.accessory.getService('NAME') || this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE_ID');
-     *
-     * The USER_DEFINED_SUBTYPE must be unique to the platform accessory (if you platform exposes multiple accessories, each accessory
-     * can use the same sub type id.)
-     */
-
-    // Example: add two "motion sensor" services to the accessory
-    const motionSensorOneService = this.accessory.getService('Motion Sensor One Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor One Name', 'YourUniqueIdentifier-1');
-
-    const motionSensorTwoService = this.accessory.getService('Motion Sensor Two Name') ||
-      this.accessory.addService(this.platform.Service.MotionSensor, 'Motion Sensor Two Name', 'YourUniqueIdentifier-2');
-
-    /**
-     * Updating characteristics values asynchronously.
-     *
-     * Example showing how to update the state of a Characteristic asynchronously instead
-     * of using the `on('get')` handlers.
-     * Here we change update the motion sensor trigger states on and off every 10 seconds
-     * the `updateCharacteristic` method.
-     *
-     */
-    let motionDetected = false;
-    setInterval(() => {
-      // EXAMPLE - inverse the trigger
-      motionDetected = !motionDetected;
-
-      // push the new value to HomeKit
-      motionSensorOneService.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
-      motionSensorTwoService.updateCharacteristic(this.platform.Characteristic.MotionDetected, !motionDetected);
-
-      this.platform.log.debug('Triggering motionSensorOneService:', motionDetected);
-      this.platform.log.debug('Triggering motionSensorTwoService:', !motionDetected);
-    }, 10000);
+    this.platform.api.publishExternalAccessories(PLUGIN_NAME, [this.accessory]);
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
-   */
-  async setOn(value: CharacteristicValue) {
-    // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
-
-    this.platform.log.debug('Set Characteristic On ->', value);
+  async init() {
+    this.platform.log.info('Start preset load');
+    this.setupPresets();
+    this.platform.log.info('Presets now loaded');
   }
 
-  /**
-   * Handle the "GET" requests from HomeKit
-   * These are sent when HomeKit wants to know the current state of the accessory, for example, checking if a Light bulb is on.
-   *
-   * GET requests should return as fast as possbile. A long delay here will result in
-   * HomeKit being unresponsive and a bad user experience in general.
-   *
-   * If your device takes time to respond you should update the status of your device
-   * asynchronously instead using the `updateCharacteristic` method instead.
+  setupPresets() {
+    if(!this.presetsConfigured) {
+      const presets = this.platform.config.presets as ExtronPreset[];
 
-   * @example
-   * this.service.updateCharacteristic(this.platform.Characteristic.On, true)
-   */
-  async getOn(): Promise<CharacteristicValue> {
-    // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+      presets.forEach(async (name, i) => {
+        const inputService = this.accessory.getService('input' + i) ||
+          this.accessory.addService(this.platform.Service.InputSource, 'input' + i, name.name);
 
-    this.platform.log.debug('Get Characteristic On ->', isOn);
+        this.platform.log.info('Adding input %s as number %s', name.name, i);
+        inputService
+          .setCharacteristic(this.platform.Characteristic.Identifier, i)
+          .setCharacteristic(this.platform.Characteristic.ConfiguredName, name.name)
+          .setCharacteristic(this.platform.Characteristic.Name, name.name)
+          .setCharacteristic(this.platform.Characteristic.IsConfigured, this.platform.Characteristic.IsConfigured.CONFIGURED)
+          .setCharacteristic(this.platform.Characteristic.InputSourceType, this.platform.Characteristic.InputSourceType.COMPONENT_VIDEO)
+          .setCharacteristic(this.platform.Characteristic.CurrentVisibilityState,
+            this.platform.Characteristic.CurrentVisibilityState.SHOWN);
+        this.service.addLinkedService(inputService);
+      });
 
-    // if you need to return an error to show the device as "Not Responding" in the Home app:
-    // throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
-
-    return isOn;
+      this.presetsConfigured = true;
+    }
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
-  async setBrightness(value: CharacteristicValue) {
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
-
-    this.platform.log.debug('Set Characteristic Brightness -> ', value);
+  async updatePowerStatus() {
+    const muteResponse = await this.telnetCommand('WVM' + String.fromCharCode(13));
+    if(muteResponse.split('').some(x => x === '1' || x === '2' || x === '3')) {
+      this.service.updateCharacteristic(this.platform.Characteristic.Active, 1);
+    } else {
+      this.service.updateCharacteristic(this.platform.Characteristic.Active, 0);
+    }
   }
 
+  async setOnOffState(value: CharacteristicValue) {
+    if(value === '1') {
+      const globalVideoMute = await this.telnetCommand('1*B');
+      const globalAudioMute = await this.telnetCommand('1*Z');
+
+      if(globalVideoMute === 'Vmt1' && globalAudioMute === 'Amt1') {
+        this.service.updateCharacteristic(this.platform.Characteristic.Active, 1);
+      }
+    } else {
+      const globalVideoMute = await this.telnetCommand('0*B');
+      const globalAudioMute = await this.telnetCommand('0*Z');
+
+      if(globalVideoMute === 'Vmt0' && globalAudioMute === 'Amt0') {
+        this.service.updateCharacteristic(this.platform.Characteristic.Active, 0);
+      }
+    }
+  }
+
+  async getPreset(presetNumber: number): Promise<ExtronPresetValues> {
+    const videoResponse =
+      await this.telnetCommand('W' + presetNumber + '*1*1VC' + String.fromCharCode(13));
+    //this.platform.log.debug('videoResponse: ' + videoResponse);
+
+    const audioResponse =
+      await this.telnetCommand('W' + presetNumber + '*1*2VC' + String.fromCharCode(13));
+    //this.platform.log.debug('audioResponse: ' + audioResponse);
+    return new ExtronPresetValues(videoResponse, audioResponse);
+  }
+
+  async updatePresetStatus() {
+    // Preset "0" is the last set preset #, so query it to get the current state.
+    const extronPreset = await this.getPreset(0);
+    const currentExtronVideoPreset = parseInt(extronPreset.videoData.split(' ')[0]);
+
+    if(currentExtronVideoPreset !== this.currentPreset) {
+      this.currentPreset = currentExtronVideoPreset;
+      this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, --this.currentPreset);
+    }
+  }
+
+  async changeInput(value: number) {
+    const newValue = value + 1;
+    this.platform.log.info('set Active Identifier => setNewValue: ' + newValue);
+
+    try {
+      const response = await this.telnetCommand(newValue + '.');
+      const responseIndex = newValue < 10 ? '0' + newValue : newValue.toString();
+
+      if(response === 'Rpr' + responseIndex) {
+        this.platform.log.info('Switched to preset ' + newValue + ': got response ' + response);
+        this.currentPreset = newValue;
+        this.service.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, value);
+      } else {
+        switch(response) {
+          case 'E11':
+            this.platform.log.info('Preset number %s is out of range of this unit', newValue);
+            break;
+          default:
+            this.platform.log.info('Response does not match: %s with a string length of ', response, response.length);
+        }
+      }
+    } catch(error) {
+      this.platform.log.error('Error: ' + error);
+    }
+  }
+
+  async telnetCommand(command: string): Promise<string> {
+    const response = await telnetResponse(this.platform.config.telnetSettings, command);
+    return response;
+  }
 }

@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations" : [
+        {
+            "name": "Launch Extron Debugging",
+            "program": "/usr/local/bin/homebridge",
+            "args": ["-D"],
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "pwa-node"
+        }
+    ]
+}
