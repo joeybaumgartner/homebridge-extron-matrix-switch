@@ -8,7 +8,7 @@ function getLineFromLines(lines: string): string {
   }
 }
 
-export async function telnetResponse(telnetParams:any, command:string): Promise<string> {
+export async function telnetResponse(telnetParams, command:string): Promise<string> {
   const connection = new Telnet.default();
 
   const params = {
@@ -20,7 +20,7 @@ export async function telnetResponse(telnetParams:any, command:string): Promise<
   try {
     await connection.connect(params);
   } catch (e) {
-    return 'error';
+    return 'error: ' + e;
   }
 
   const result = await connection.send(command);
