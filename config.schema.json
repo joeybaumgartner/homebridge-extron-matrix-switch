@@ -47,6 +47,13 @@
           }
         }
       },
+      "updateInterval": {
+        "title": "Update Interval",
+        "type": "integer",
+        "placeholder": 1,
+        "description": "The time (in seconds) to wait between status updates from the accessory",
+        "minimum": 1
+      },
       "presets": {
         "type": "array",
         "description": "Enter each preset using the number assigned on your unit, and a name to identify it.",

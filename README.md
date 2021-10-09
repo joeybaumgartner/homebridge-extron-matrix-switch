@@ -1,18 +1,10 @@
-
-<p align="center">
-
-<img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
-
-</p>
-
-
 # Extron Matrix Switch Homebridge Plugin
 
 This is a plugin to control your Extron Crosspoint Matrix switch via [Homebridge](https://homebridge.io). This is controlled through the use of the Telnet interface available on networked versions of these devices.
 
 The purpose of developing this was to automate playing retro game consoles in my basement. Instead of turning on the TV, the receiver, the switch, and the scaler and then setting everything to the correct input, it's much easier to say "Hey Siri, turn on the Super Nintendo", and just start jumping on turtles.
 
-In addition, this plugin will also allow you to lock the panel and track the units' temperature.
+In addition, this plugin will also allow you to lock the panel.
 
 ## Install
 
@@ -21,6 +13,8 @@ I recommend installing this via the Homebridge UI. If you prefer not to use this
 ```
 sudo npm install -g homebridge-extron-matrix-switch
 ```
+
+Once installed as a plugin in Homebridge, you will have to manually add this unit as it is implemented as an external accessory. Just add an accessory in Home.app and it should list the device; tap on it, and then key in your Homebridge code and walk through the rest of the setup process.
 
 ## Setup
 
@@ -31,6 +25,8 @@ This plugin can currently only control global presets. Meaning that you must set
 - via the Extron software.
 
 Once you have presets setup, the plugin will allow you to switch between them through the Home app, and will update the current status of the input selection if it's changed outside of the Home app.
+
+Note that the "receiver" and panel lock are implemented as single accessory. You can split these out by going into the accessory settings and tapping/clicking on **Show as Separate Tiles**.
 
 ### Configuration
 
@@ -59,4 +55,28 @@ A Lock Mechanism in HomeKit only allows two target states: secured and unsecured
 
 ## Resources
 
+The following is a list of resources I used to build this plugin. I do want to mention the use of the [Homebridge Developers](https://developers.homebridge.io/) site as well.
+
+### Documents
+
 These CrossPoint units are considered obsolete/deprecated, but Extron still makes available a lot of information on these units. This is the [user guide](https://media.extron.com/public/download/files/userman/68-521-20_F.pdf) I followed to develop this plugin.
+
+### Homebridge Projects
+
+I would like to thank all of those people who have published and shared their Homebridge projects on Github over the years, and I would like to link to these ones whose code helped me out of a jam quite a few times.
+
+[Denon Heos Homebridge Pluin](https://www.npmjs.com/package/homebridge-denon-heos)
+
+- This is the first major Homebridge plugin I used and was both a great source of inspiration and ideas on what I needed to implement for my project.
+
+[Yale Link Homebridge Plugin](https://www.npmjs.com/package/homebridge-yale-link)
+
+- When stuck with numerous improper lock states, your code helped me determine what I was doing wrong, and how to properly get the correct state.
+
+["Dummy Lock" Plugin](https://www.npmjs.com/package/homebridge-dummy-lock)
+
+- A simple "dummy lock" that was nice to review to verify what I was getting right, and what I was getting wrong.
+
+### Tools
+
+This plugin was built in Visual Studio Code for Mac, and was based off the default [Dynamic Platform Plugin template](https://github.com/homebridge/homebridge-plugin-template).

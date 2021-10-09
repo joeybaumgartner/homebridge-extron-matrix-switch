@@ -9,7 +9,7 @@ import { ExtronMatrixSwitchPlatformAccessory } from './platformAccessory';
  * parse the user config and discover/register accessories with Homebridge.
  */
 
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
+export class ExtronMatrixSwitchHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
@@ -77,8 +77,8 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
       const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
       if (existingAccessory) {
-        if(device) {
-        // the accessory already exists
+        if (device) {
+          // the accessory already exists
           this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
           // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
