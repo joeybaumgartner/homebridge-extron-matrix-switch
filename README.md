@@ -14,7 +14,7 @@ I recommend installing this via the Homebridge UI. If you prefer not to use this
 sudo npm install -g homebridge-extron-matrix-switch
 ```
 
-Once installed as a plugin in Homebridge, you will have to manually add this unit as it is implemented as an external accessory. Just add an accessory in Home.app and it should list the device; tap on it, and then key in your Homebridge code and walk through the rest of the setup process.
+Once installed as a plugin in Homebridge, you will have to manually add this unit as it is implemented as an external accessory. Add an accessory in Home.app, select **More options...**, and it should list the device; tap on it, and then enter your Homebridge code and walk through the rest of the setup process.
 
 ## Setup
 

@@ -54,7 +54,7 @@ export class ExtronMatrixSwitchPlatformAccessory {
 
     this.accessory.category = this.platform.api.hap.Categories.AUDIO_RECEIVER;
 
-    this.avService.setCharacteristic(this.platform.Characteristic.Name, 'TryThisNewName');
+    this.avService.setCharacteristic(this.platform.Characteristic.Name, 'Extron');
 
     this.avService.setCharacteristic(this.platform.Characteristic.SleepDiscoveryMode,
       this.platform.Characteristic.SleepDiscoveryMode.ALWAYS_DISCOVERABLE);

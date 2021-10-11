@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Extron Matrix Switch",
   "name": "homebridge-extron-matrix-switch",
   "version": "1.0.0",
