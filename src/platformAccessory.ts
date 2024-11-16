@@ -198,7 +198,7 @@ export class ExtronMatrixSwitchPlatformAccessory {
   //#region Input Status
 
   /**
-   * Updates the HomeKit staet of the preset that is currently active on the Extron
+   * Updates the HomeKit state of the preset that is currently active on the Extron
    * unit itself.
    *
    * Note that when setting the current preset within HomeKit, the currentPreset value
@@ -210,9 +210,15 @@ export class ExtronMatrixSwitchPlatformAccessory {
     const currentPreset = await this.telnetCommand('W0*1*1VC' + String.fromCharCode(13));
     const currentExtronVideoPreset = parseInt(currentPreset.split(' ')[0]);
 
-    if(currentExtronVideoPreset !== this.currentPreset) {
-      this.currentPreset = currentExtronVideoPreset;
-      this.avService.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, --this.currentPreset);
+    this.platform.log.debug("Listening to update status change, preset set to %s", currentExtronVideoPreset);
+
+    if(isNaN(currentExtronVideoPreset)) {
+      this.platform.log.debug('Response back from Extron was %s', currentExtronVideoPreset);
+    } else {
+      if(currentExtronVideoPreset !== this.currentPreset) {
+        this.currentPreset = currentExtronVideoPreset;
+        this.avService.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, --this.currentPreset);
+      }
     }
   }
 
@@ -332,5 +338,5 @@ export class ExtronMatrixSwitchPlatformAccessory {
     return response;
   }
 
-  // #edregion Support functions/methods
+  // #endregion Support functions/methods
 }
