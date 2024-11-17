@@ -1,4 +1,4 @@
-import * as Telnet from 'telnet-client';
+import { Telnet as Telnet } from 'telnet-client';
 
 /**
  * Processes lines of input from telnet response and returns what the unit has
@@ -21,8 +21,8 @@ function getLineFromLines(lines: string): string {
  * @param command The command to be procssed by the telnet server.
  * @returns The response from the telnet server.
  */
-export async function telnetResponse(telnetParams, command:string): Promise<string> {
-  const connection = new Telnet.default();
+export async function telnetResponse(telnetParams: { hostname: string; port: number; }, command: string): Promise<string> {
+  const connection = new Telnet();
 
   const params = {
     host: telnetParams.hostname,
