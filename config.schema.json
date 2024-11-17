@@ -42,6 +42,7 @@
           "port": {
             "title": "Port",
             "type": "integer",
+            "default": 23,
             "placeholder": 23,
             "description": "Default port for telnet is 23, set as appropriate for your device."
           }

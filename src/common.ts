@@ -26,7 +26,7 @@ export async function telnetResponse(telnetParams: { hostname: string; port: num
 
   const params = {
     host: telnetParams.hostname,
-    port: telnetParams.port,
+    port: telnetParams.port ?? 23,
     negotiationMandatory: false,
   };
 
