@@ -2,7 +2,7 @@
   "displayName": "Extron Matrix Switch",
   "name": "homebridge-extron-matrix-switch",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A plugin to control your Extron Matrix switch via HomeBridge.",
   "author": "Joe Baumgartner",
   "license": "Apache-2.0",
