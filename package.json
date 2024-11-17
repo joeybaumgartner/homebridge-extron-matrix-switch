@@ -1,9 +1,12 @@
 {
   "displayName": "Extron Matrix Switch",
   "name": "homebridge-extron-matrix-switch",
-  "version": "1.0.1",
+  "type": "module",
+  "version": "1.0.0",
   "description": "A plugin to control your Extron Matrix switch via HomeBridge.",
+  "author": "Joe Baumgartner",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/joeybaumgartner/homebridge-extron-matrix-switch#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/joeybaumgartner/homebridge-extron-matrix-switch.git"
@@ -12,21 +15,20 @@
     "url": "https://github.com/joeybaumgartner/homebridge-extron-matrix-switch/issues"
   },
   "engines": {
-    "node": ">=18.20.4",
-    "homebridge": "^1.8.0"
+    "node": "^18.20.4 || ^20.18.0 || ^22.10.0",
+    "homebridge": "^1.8.0 || ^2.0.0-beta.0"
   },
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint src/**.ts --max-warnings=0",
-    "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
-    "prepublishOnly": "npm run lint && npm run build"
+    "lint": "eslint . --max-warnings=0",
+    "prepublishOnly": "npm run lint && npm run build",
+    "watch": "npm run build && npm link && nodemon"
   },
   "keywords": [
     "homebridge-plugin"
   ],
   "dependencies": {
-    "homebridge-config-ui-x": "^4.62.0",
     "telnet-client": "2.2.1"
   },
   "devDependencies": {
@@ -34,10 +36,11 @@
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.8.6",
     "eslint": "^9.14.0",
-    "homebridge": "1.8.5",
+    "homebridge": "^2.0.0-beta.0",
     "nodemon": "^3.1.7",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.14.0"
   }
 }

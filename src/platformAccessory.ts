@@ -1,8 +1,8 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import type { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { ExtronMatrixSwitchHomebridgePlatform } from './platform';
-import { telnetResponse } from './common';
-import { PLUGIN_NAME } from './settings';
+import { ExtronMatrixSwitchHomebridgePlatform } from './platform.js';
+import { telnetResponse } from './common.js';
+import { PLUGIN_NAME } from './settings.js';
 
 /**
  * An interface that defines what fields are required for an preset on the
@@ -82,14 +82,14 @@ export class ExtronMatrixSwitchPlatformAccessory {
     this.avService.getCharacteristic(this.platform.Characteristic.RemoteKey)
       .onSet((newValue) => {
         switch(newValue) {
-          default: {
-            break;
-          }
+        default: {
+          break;
+        }
         }
       });
 
     // Setup lock
-    this.platform.config.lockLevel === 'level1' ? '1X' : '2X';
+    this.lockingCode = this.platform.config.lockLevel === 'level1' ? '1X' : '2X';
 
     this.lockService = this.accessory.getService(this.platform.Service.LockMechanism)
     || this.accessory.addService(this.platform.Service.LockMechanism);
@@ -210,7 +210,7 @@ export class ExtronMatrixSwitchPlatformAccessory {
     const currentPreset = await this.telnetCommand('W0*1*1VC' + String.fromCharCode(13));
     const currentExtronVideoPreset = parseInt(currentPreset.split(' ')[0]);
 
-    this.platform.log.debug("Listening to update status change, preset set to %s", currentExtronVideoPreset);
+    this.platform.log.debug('Listening to update status change, preset set to %s', currentExtronVideoPreset);
 
     if(isNaN(currentExtronVideoPreset)) {
       this.platform.log.debug('Response back from Extron was %s', currentExtronVideoPreset);
@@ -242,11 +242,11 @@ export class ExtronMatrixSwitchPlatformAccessory {
         this.avService.updateCharacteristic(this.platform.Characteristic.ActiveIdentifier, value);
       } else {
         switch(response) {
-          case 'E11':
-            this.platform.log.info('Preset number %s is out of range of this unit', newValue);
-            break;
-          default:
-            this.platform.log.info('Response does not match: %s with a string length of ', response, response.length);
+        case 'E11':
+          this.platform.log.info('Preset number %s is out of range of this unit', newValue);
+          break;
+        default:
+          this.platform.log.info('Response does not match: %s with a string length of ', response, response.length);
         }
       }
     } catch(error) {
